@@ -7,31 +7,37 @@ out=${src}/out
 tmpdir=${1:-wdir}
 shift
 
-UGREP=./ugrep
-UG="$UGREP --color=always --sort $@"
+if [[ ${QEMU:+isset } ]] ; then
+  if ! type -f "$QEMU" > /dev/null ; then
+    >&2 echo "$QEMU is not installed"
+    exit 77
+  fi
+
+  # FIXME: This is a hack for Ubuntu where qemu is not configured with the correct library search path
+  if type -t lsb_release >/dev/null && [[ "$(lsb_release -is)" == "Ubuntu" ]] ; then
+      QEMU_LIBDIR="-L /usr/$QEMU_HOST_ALIAS"
+  else
+      QEMU_LIBDIR=
+  fi
+
+  UG="${QEMU} --cpu $QEMU_CPU $QEMU_LIBDIR $(realpath ./ugrep) --color=always --sort $@"
+else
+  UG="$(realpath ./ugrep) --color=always --sort $@"
+fi
+
 
 FILES="Hello.bat Hello.class Hello.java Hello.pdf Hello.sh Hello.txt empty.txt emptyline.txt"
 
 # check for errors in the installation
-
-if test ! -x "$UGREP" ; then
-  echo "$UGREP not found, exiting"
-  exit 1
-fi
 
 if test ! -e "$CONFIGH" ; then
   echo "$CONFIGH not found, exiting"
   exit 1
 fi
 
-if ! $UG --version | head -n1 ; then
-  echo "$UGREP failed to execute, exiting"
-  exit 1
-fi
-
 # check for recommended libraries
 
-if $UG -Fq 'HAVE_PCRE2 1' "$CONFIGH" ; then
+if grep -Fq 'HAVE_PCRE2 1' "$CONFIGH" ; then
   have_pcre2=yes
 else
   have_pcre2=no
@@ -40,7 +46,7 @@ fi
 printf "Have libpcre2?  %3s (recommended)\n" $have_pcre2
 
 if test "$have_pcre2" = "no" ; then
-  if $UG -Fq 'HAVE_BOOST_REGEX 1' "$CONFIGH" ; then
+  if grep -Fq 'HAVE_BOOST_REGEX 1' "$CONFIGH" ; then
     have_boost_regex=yes
   else
     have_boost_regex=no
@@ -49,7 +55,7 @@ if test "$have_pcre2" = "no" ; then
   printf "Have libboost_regex? %s (optional)\n" $have_boost_regex
 fi
 
-if $UG -Fq 'HAVE_LIBZ 1' "$CONFIGH" ; then
+if grep -Fq 'HAVE_LIBZ 1' "$CONFIGH" ; then
   have_libz=yes
 else
   have_libz=no
@@ -57,7 +63,7 @@ fi
 
 printf "Have libz?      %3s (recommended)\n" $have_libz
 
-if $UG -Fq 'HAVE_LIBBZ2 1' "$CONFIGH" ; then
+if grep -Fq 'HAVE_LIBBZ2 1' "$CONFIGH" ; then
   have_libbz2=yes
 else
   have_libbz2=no
@@ -65,7 +71,7 @@ fi
 
 printf "Have libbz2?    %3s (recommended)\n" $have_libbz2
 
-if $UG -Fq 'HAVE_LIBLZMA 1' "$CONFIGH" ; then
+if grep -Fq 'HAVE_LIBLZMA 1' "$CONFIGH" ; then
   have_liblzma=yes
 else
   have_liblzma=no
@@ -75,7 +81,7 @@ printf "Have liblzma?   %3s (recommended)\n" $have_liblzma
 
 # check for optional libraries
 
-if $UG -Fq 'HAVE_LIBLZ4 1' "$CONFIGH" ; then
+if grep -Fq 'HAVE_LIBLZ4 1' "$CONFIGH" ; then
   have_liblz4=yes
 else
   have_liblz4=no
@@ -83,7 +89,7 @@ fi
 
 printf "Have liblz4?    %3s (optional)\n" $have_liblz4
 
-if $UG -Fq 'HAVE_LIBZSTD 1' "$CONFIGH" ; then
+if grep -Fq 'HAVE_LIBZSTD 1' "$CONFIGH" ; then
   have_libzstd=yes
 else
   have_libzstd=no
@@ -91,7 +97,7 @@ fi
 
 printf "Have libzstd?   %3s (optional)\n" $have_libzstd
 
-if $UG -Fq 'HAVE_LIBBROTLI 1' "$CONFIGH" ; then
+if grep -Fq 'HAVE_LIBBROTLI 1' "$CONFIGH" ; then
   have_libbrotli=yes
 else
   have_libbrotli=no
@@ -99,7 +105,7 @@ fi
 
 printf "Have libbrotli? %3s (optional)\n" $have_libbrotli
 
-if $UG -Fq 'HAVE_7ZIP 1' "$CONFIGH" ; then
+if grep -Fq 'HAVE_7ZIP 1' "$CONFIGH" ; then
   have_7zip=yes
 else
   have_7zip=no
@@ -109,7 +115,7 @@ printf "Have 7zip?      %3s (optional)\n" $have_7zip
 
 # check for libraries that aren't typically installed, don't report
 
-if $UG -Fq 'HAVE_LIBBZIP3 1' "$CONFIGH" ; then
+if grep -Fq 'HAVE_LIBBZIP3 1' "$CONFIGH" ; then
   have_libbzip3=yes
   printf "Have libbzip3?  yes (requested)\n"
 else
@@ -160,7 +166,6 @@ END
 # tests
 (
 cd $tmpdir
-UG=../$UG
 if [ ${src##/} == ${src} ] ; then
   # if src is relative, out is the parent
   out=../$out
@@ -203,7 +208,6 @@ $UG -Rl --filter='sh:head -n1'           Hello dir1 | $DIFF $out/dir--filter.out
 rm -rf $tmpdir
 
 (
-UG="$(realpath $UGREP) --color=always --sort $@"
 cd $src
 
 for OPS in '' '-F' '-G' ; do
