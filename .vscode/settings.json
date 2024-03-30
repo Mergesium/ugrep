@@ -1,0 +1,77 @@
+{
+    "autotools.configurations": [
+        {
+            "name": "Default",
+            "top_builddir": "build/Default"
+        },
+        {
+            "name": "Debug",
+            "top_builddir": "build/Debug",
+            "makeArgs": [ "-j12" ],
+            "configureArgs": [
+                "CXXFLAGS=-ggdb3 -O0",
+                "CPPFLAGS=-DDEBUG=1",
+                "CXX=g++-9"
+            ]
+        },
+        {
+            "name": "Debug No-PCRE2",
+            "top_builddir": "build/No-PCRE2",
+            "makeArgs": [ "-j12" ],
+            "configureArgs": [
+                "CXXFLAGS=-ggdb3 -O0",
+                "CXX=g++-9",
+                "--disable-pcre2"
+            ]
+        },
+        {
+            "name": "Aarch64",
+            "top_builddir": "build/Arm64",
+            "configureArgs": [
+                "--host=aarch64-linux-gnu"
+            ]
+        },
+        {
+            "name": "Arm7a",
+            "top_builddir": "build/Arm7a",
+            "configureArgs": [
+                "--host=arm-linux-gnueabihf"
+            ]
+        },
+        {
+            "name": "Debug Arm6a",
+            "top_builddir": "build/Arm6a",
+            "configureArgs": [
+                "CXXFLAGS=-O0 -ggdb3",
+                "--host=arm-linux-gnueabi"
+            ]
+        },
+        {
+            "name": "Full Win32-x86_64-posix",
+            "top_builddir": "build/Win32-x86_64-posix",
+            "configureArgs": [
+                // Full build - cross-compiled W64 packages are installed at SYSROOT
+                "PKG_CONFIG_SYSROOT_DIR=/mnt/sysroots/win32-x64",
+                "PKG_CONFIG_PATH=/mnt/sysroots/win32-x64/usr/local/lib/pkgconfig",
+                // Select the --posix compiler because -w32 thread implementation is incomplete in mingw32
+                "CXX=x86_64-w64-mingw32-g++-posix",
+                "--host=x86_64-w64-mingw32"
+            ]
+        },
+        {
+            "name": "Win32-x86_64-win32",
+            "top_builddir": "build/Win32-x86_64-win32",
+            "makeArgs": [ "-j12" ],
+            "configureArgs": [
+                "WIN_KIT_DIR=/mnt/build/win10sdk",
+                "WIN_KIT_VER=10.0.22621.0",
+                "PKG_CONFIG_SYSROOT_DIR=/mnt/build/radu/win32-x64-sysroot",
+                "PKG_CONFIG_PATH=/mnt/build/radu/win32-x64-sysroot/usr/local/lib/pkgconfig",
+                "CXX=x86_64-w64-mingw32-g++-win32",
+                "--prefix=/tmp/ugrep-inst-x86_64-w64-mingw32",
+                "--host=x86_64-w64-mingw32",
+                "--enable-option-checking"
+            ]
+        }
+    ]
+}
