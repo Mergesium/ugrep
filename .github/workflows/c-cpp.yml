@@ -2,17 +2,41 @@ name: C/C++ CI
 
 on:
   push:
-    branches: [ "master", "autotools" ]
+    branches:
+      - master
+      - autotools
+      - add-emulated-tests
   pull_request:
-    branches: [ "master", "autotools" ]
+    branches:
+      - master
+      - autotools
+      - add-emulated-tests
 
 jobs:
-  build:
+  Distribution:
+    name: Test and Distribute Source
 
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
+    - name: Enable arm64, arm and armhf libraries
+      run: |
+        sudo dpkg --add-architecture arm64
+        sudo dpkg --add-architecture arm
+        sudo dpkg --add-architecture armhf
+        sudo apt-get reinstall pkg-config
+        # Ubuntu bug causes pkg-config be created as "gnu" instead of "gnueabi". Fix this up.
+        sudo mv /usr/bin/arm-linux-gnu{,eabi}-pkg-config
+
+    - name: Install cross compilers/tools
+      run: sudo apt-get install g++-aarch64-linux-gnu
+          libstdc++6-arm64-cross
+          g++-arm-linux-gnueabihf
+          libstdc++6-armhf-cross
+          g++-arm-linux-gnueabi
+          libstdc++6-armel-cross
+          qemu-user
 
     - name: Bootstrap autotools
       id: bootstrap
@@ -26,7 +50,25 @@ jobs:
         --disable-dependency-tracking
 
     - name: Check Source Distribution (compile, install, test, uninstall, tarball)
-      run: make -j`nproc` distcheck
+      run: make -j`nproc` distcheck && make distclean
+
+    - name: Test Aarch64
+      run: |
+        mkdir -p build/Arm64 && cd build/Arm64
+        ../../configure --host=aarch64-linux-gnu
+        make -j`nproc` check && make clean
+
+    - name: Test Arm v7
+      run: |
+        mkdir -p build/Arm7 && cd build/Arm7
+        ../../configure --host=arm-linux-gnueabihf
+        make -j`nproc` check && make clean
+
+    - name: Test Arm v6
+      run: |
+        mkdir -p build/Arm6 && cd build/Arm6
+        ../../configure --host=arm-linux-gnueabi
+        make -j`nproc` check && make clean
 
     - name: Upload Tarball as artifact
       uses: actions/upload-artifact@v4
