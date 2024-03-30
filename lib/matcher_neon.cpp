@@ -34,11 +34,7 @@
 @copyright (c) BSD-3 License - see LICENSE.txt
 */
 
-#if defined(HAVE_NEON)
-# if !defined(__ARM_NEON) && !defined(__ARM_FEATURE_SIMD32)
-#  error matcher_neon.cpp must be compiled with -march=arm7-a or -march=arm8-a or /arch:???.
-# endif
-#endif
-
+#if defined(__ARM_NEON__) || defined(__ARM_NEON)
 #define COMPILE_NEON
 #include "matcher.cpp"
+#endif

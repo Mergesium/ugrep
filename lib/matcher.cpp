@@ -93,8 +93,10 @@ size_t Matcher::match(Method method)
 #endif
 #endif
 #if defined(HAVE_NEON)
+#if __ARM_ARCH != 5
   if (HW.neon)
     return simd_match_neon(method);
+#endif
 #endif
 #endif
   DBGLOG("BEGIN Matcher::match()");

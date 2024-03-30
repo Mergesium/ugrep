@@ -89,6 +89,60 @@ AM_TESTS_ENVIRONMENT = \
 TESTS = \
         ../tests/verify-single-thread.sh \
         ../tests/verify-multi-thread.sh
+XFAIL_TESTS =
+
+if ENABLE_CROSS_COMPILED
+AM_TESTS_ENVIRONMENT += \
+        QEMU=$(QEMU) \
+        QEMU_HOST_ALIAS=$(host_alias)
+endif
+
+# ############################################################
+#                       Binary Portability Tests             #
+# ############################################################
+
+portable,%: t/binary-portability.sh
+	$(LN_S) $< $@
+
+if ENABLE_CROSS_COMPILED
+if ENABLE_QEMU_TESTS_LINUX
+
+# Built for armv6, should run on v6 and v7 without NEON detected
+if ENABLE_QEMU_TESTS_ARM
+AM_TESTS_ENVIRONMENT += QEMU_CPU=arm1136
+TESTS += \
+        portable,arm-linux-gnueabi,arm1136,, \
+        portable,arm-linux-gnueabihf,cortex-a9,neon@on, \
+        portable,arm-linux-gnueabihf,cortex-a9,neon@off,
+endif
+
+# Built for armv7, should run on v7 with optional NEON
+if ENABLE_QEMU_TESTS_ARMHF
+AM_TESTS_ENVIRONMENT += QEMU_CPU=cortex-a9
+TESTS += \
+        portable,arm-linux-gnueabihf,cortex-a9,neon@on,+neon \
+        portable,arm-linux-gnueabihf,cortex-a9,neon@off,-neon
+endif
+
+# Built for armv8, should run on v8 with mandatory NEON
+if ENABLE_QEMU_TESTS_ARM64
+
+# FIXME: neon is enabled in qemu-aarch64, and setting neon=off does not
+# disable it. see https://stackoverflow.com/questions/37299524/neon-support-in-armv8-system-mode-qemu
+# Something is needed to truly turn it off for this test.
+XFAIL_TESTS += \
+        portable,aarch64-linux-gnu,cortex-a53,neon@off~vfp@off,-neon
+
+AM_TESTS_ENVIRONMENT += QEMU_CPU=cortex-a53
+TESTS += \
+        portable,aarch64-linux-gnu,cortex-a53,neon@off~vfp@off,-neon \
+        portable,aarch64-linux-gnu,cortex-a53,,+neon
+
+endif
+
+endif
+endif
+
 
 # ############################################################
 #                       Shell completions                    #

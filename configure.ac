@@ -13,6 +13,12 @@ AC_CONFIG_MACRO_DIR([m4])
 : ${CXXFLAGS="-Wall -Wextra -Wunused -O2"}
 : ${CFLAGS="-Wall -Wextra -Wunused -O2"}
 
+AC_CANONICAL_HOST
+AS_IF([test "$cross_compiling" != "no"],[
+  AC_PATH_PROG([QEMU], [qemu-$host_cpu])
+])
+AM_CONDITIONAL([ENABLE_CROSS_COMPILED], [test "$ac_cv_path_QEMU" != ""])
+
 AC_LANG([C++])
 AX_CXX_COMPILE_STDCXX([11], [ext], [mandatory])
 
@@ -47,8 +53,6 @@ AC_PROG_LN_S
 AC_PROG_SED
 
 PKG_PROG_PKG_CONFIG
-
-AC_CANONICAL_HOST
 
 PLATFORM=${host}
 AC_SUBST(PLATFORM)
@@ -460,6 +464,12 @@ AC_CONFIG_LINKS([
   completions/bash/ugrep+:completions/bash/ug
   completions/bash/ug+:completions/bash/ug
 ])
+
+# Generated tests
+AM_CONDITIONAL([ENABLE_QEMU_TESTS_LINUX], [test "$build_os" = "linux-gnu"])
+AM_CONDITIONAL([ENABLE_QEMU_TESTS_ARM], [test "$host_alias" = "arm-linux-gnueabi"])
+AM_CONDITIONAL([ENABLE_QEMU_TESTS_ARMHF], [test "$host_alias" = "arm-linux-gnueabihf"])
+AM_CONDITIONAL([ENABLE_QEMU_TESTS_ARM64], [test "$host_cpu" = "aarch64"])
 
 AC_CONFIG_FILES([
   Makefile

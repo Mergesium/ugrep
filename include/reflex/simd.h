@@ -44,7 +44,9 @@
 # include <emmintrin.h>
 #endif
 #if defined(HAVE_NEON)
+#if defined(__ARM_NEON__) || defined(__ARM_NEON)
 # include <arm_neon.h>
+#endif
 #endif
 
 #if defined(__x86_64__) || defined(_M_X64)
@@ -119,20 +121,17 @@ extern size_t simd_nlcount_avx512bw(const char*& b, const char *e);
 
 } // namespace reflex
 
-#elif defined(__aarch64__) || defined(_M_ARM64)
+#elif defined(__ARM_ARCH) || defined(_M_ARM64)
 
 struct SIMD_caps {
   unsigned neon: 1;       /* true if it has NEON instructions */
 };
 
-#elif defined(__ARM_ARCH_7A__)
-
+/* If the arch has conditional hardware support, include detection API */
+#if !defined(__SOFTFP__) && !defined(__ARM_NEON)
 #include <sys/auxv.h>
 #include <asm/hwcap.h>
-
-struct SIMD_caps {
-  unsigned neon: 1;       /* true if it has NEON instructions */
-};
+#endif
 
 #endif
 

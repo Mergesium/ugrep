@@ -14723,7 +14723,11 @@ void version()
     (reflex::HW.sse2 ?  " +sse2" : " -sse2") <<
 #endif
 #if defined(HAVE_NEON)
-    " +neon/AArch64" <<
+#if defined(__ARM_NEON)
+    " +neon" <<
+#elif !defined(__SOFTFP__)
+    (reflex::HW.neon ? " +neon" : " -neon") <<
+#endif
 #endif
 #if defined(HAVE_PCRE2)
     (pcre2_config(PCRE2_CONFIG_JIT, &tmp) >= 0 && tmp != 0 ? "; -P:pcre2jit" : "; -P:pcre2") <<
