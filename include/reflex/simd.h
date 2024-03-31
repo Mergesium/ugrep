@@ -128,7 +128,7 @@ struct SIMD_caps {
 };
 
 /* If the arch has conditional hardware support, include detection API */
-#if !defined(__SOFTFP__) && !defined(__ARM_NEON)
+#if !defined(__SOFTFP__)
 #include <sys/auxv.h>
 #include <asm/hwcap.h>
 #endif

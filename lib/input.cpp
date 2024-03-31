@@ -1390,8 +1390,8 @@ static struct SIMD_caps get_HW()
   }
 #elif defined(HWCAP_NEON)
   caps.neon = !!(getauxval(AT_HWCAP) & HWCAP_NEON);
-#elif defined(HAVE_NEON)
-  caps.neon = 1;
+#elif defined(HWCAP_ASIMD)
+  caps.neon = !!(getauxval(AT_HWCAP) & HWCAP_ASIMD);
 #endif
   return caps;
 }
