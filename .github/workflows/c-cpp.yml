@@ -2,9 +2,7 @@ name: C/C++ CI
 
 on:
   push:
-    branches: [ "master", "autotools" ]
   pull_request:
-    branches: [ "master", "autotools" ]
 
 jobs:
   build:
@@ -35,3 +33,11 @@ jobs:
         path: ${{ steps.bootstrap.outputs.tarball }}
         compression-level: 0 # no compression
         retention-days: 2 # save $ on temp storage
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        prerelease: true
+        generate_release_notes: true
+        files: ${{ steps.bootstrap.outputs.tarball }} 
