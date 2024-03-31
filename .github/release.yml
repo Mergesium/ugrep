@@ -17,4 +17,4 @@ changelog:
         - bugfix
     - title: Other Changes
       labels:
-        - "*"
+        - '*'
